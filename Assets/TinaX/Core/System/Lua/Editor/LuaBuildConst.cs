@@ -81,7 +81,7 @@ namespace TinaXEditor.Lua
             
             typeof(TinaX.XSound),
             typeof(TinaX.Sound.SoundTrack),
-            typeof(TinaX.AssetsMgr),
+            typeof(TinaX.VFSMgr),
             typeof(TinaX.VFS.XAssetsManager),
 
             typeof(TinaX.Lua.LuaBehaviour),
@@ -112,7 +112,7 @@ namespace TinaXEditor.Lua
             typeof(TinaX.UIKit.UIEntity),
             typeof(TinaX.UIKit.XUIMgrGateway),
             typeof(TinaX.UIKit.IUIEntity),
-            typeof(TinaX.UIKit.IUIMgr),
+            typeof(TinaX.UIKit.IUIKit),
 
 
             #endregion
@@ -145,6 +145,9 @@ namespace TinaXEditor.Lua
             typeof(Action<Collision>),
             typeof(Action<UnityEngine.Object>),
 
+            //Scene
+            typeof(Action<TinaX.SceneLoadAsyncPlan>),
+
             ////thirdparty
             //typeof(System.Func<SuperScrollView.LoopListView2, int, SuperScrollView.LoopListViewItem2>),
             //typeof(Action<SuperScrollView.LoopListViewItem2,object>),
@@ -155,10 +158,10 @@ namespace TinaXEditor.Lua
 
         [BlackList]
         public static List<List<string>> BlackList = new List<List<string>>()  {
-            //Unity
+            //Unity--------------------------------------------
             new List<string>(){ "UnityEngine.UI.Text", "OnRebuildRequested"},
 
-
+            //TinaX ------------------------------------------
             new List<string>(){ "TinaX.VFS.XAssetsManager", "Debug_GetABLoadedInfo"},
 
             new List<string>(){ "TinaX.Setup", "EditorFrameworkOutsideFolderPath"},
@@ -167,7 +170,9 @@ namespace TinaXEditor.Lua
             new List<string>(){ "TinaX.Setup", "Framework_VFS_Patch_Path"},
             new List<string>(){ "TinaX.Setup", "EditorFrameworkCacheFolder"},
 
-            new List<string>(){ "TinaX.Lua.LuaBehaviour", "HotOverload"}
+            new List<string>(){ "TinaX.Lua.LuaBehaviour", "HotOverload"},
+            new List<string>(){ "TinaX.UIKit.XEmpty4Raycast", "AddxE4R"},
+
 
         };
 

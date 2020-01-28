@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace TinaX.UIKit
 {
-    public interface IUIMgr
+    public interface IUIKit
     {
 
         /// <summary>
@@ -21,6 +21,17 @@ namespace TinaX.UIKit
         /// UI安全区管理器
         /// </summary>
         XUISafeAreaMgr UISafeAreaManager { get; }
+
+        /// <summary>
+        /// UICamera's GameObject
+        /// </summary>
+        GameObject UIKit_UICamera_GameObject { get; }
+
+        /// <summary>
+        /// UIKit UI Camera
+        /// </summary>
+        Camera UIKit_UICamera { get; }
+
 
         /// <summary>
         /// 打开UI
@@ -212,6 +223,14 @@ namespace TinaX.UIKit
         /// </summary>
         /// <param name="ui_group">UI组</param>
         void SetUIGroup(UIGroupConf ui_group);
+
+        /// <summary>
+        /// 获取某个UI元素相对UIKit根节点的相对坐标，成功返回坐标，失败返回Vector2.zero
+        /// </summary>
+        /// <param name="trans">UI元素的</param>
+        /// <returns></returns>
+        Vector2 GetUIScreenLocalPoint(Transform trans);
+
     }
 }
 

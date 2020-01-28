@@ -7,7 +7,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Newtonsoft.Json;
+
 
 namespace TinaX.UIKit
 {
@@ -79,7 +79,7 @@ namespace TinaX.UIKit
             string config_json;
             if (mUIConfig.UISafeArea_LoadByVFS)
             {
-                config_json = TinaX.AssetsMgr.I.LoadAsset<TextAsset>(mUIConfig.UI_SafeArea_Json)?.text;
+                config_json = VFSMgr.I.LoadAsset<TextAsset>(mUIConfig.UI_SafeArea_Json)?.text;
             }
             else
             {
@@ -90,7 +90,7 @@ namespace TinaX.UIKit
                 return null;
             }
 
-            return JsonConvert.DeserializeObject<XUISafeAreaModel>(config_json);
+            return JsonUtility.FromJson<XUISafeAreaModel>(config_json);
 
         }
 

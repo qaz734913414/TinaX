@@ -17,6 +17,18 @@ TinaX Framework 是一个基于Unity引擎的游戏开发框架，旨在为中�
 
 完整文档请访问：[tinax.corala.space](https://tinax.corala.space)
 
+### 预览版本
+
+当前`master`分支版本为`6.4.x`，这个版本已经被用于我们的多个生产项目，基本稳定。
+
+但是由于剥离了一些我们团队内部的工具，*如基于内部项目管理系统（其实就是禅道）的补丁打包工具、关联到内部服务器的热更新推送、机型性能查询等服务* ，6.4.x的部分功能显得过于孱弱。
+
+于是，我们开始对Framework的部分内容进行重构，重构部分暂时不定期会更新到[预览分支](https://github.com/yomunsam/TinaX/tree/tinax_6.5)
+
+预览分支将在相对稳定之后并入master分支，期间的新功能也会放在预览分支中，master分支不出意外的话，仅进行bug修复相关的更新。
+
+截至2020年1月，预览分支已基本趋于稳定，建议尝试。（但要注意的是，新版的热更新**补丁**的打包工具我们从框架里移除了，开发者可以在业务逻辑中根据VFS的结构自行编写符合各自项目需求的热更新方案，补丁覆盖在对应位置之后VFS自己会去识别加载的。目前我们也正在探索尝试更加易用高效且大众化的资源解决方案。）
+
 ## 环境要求
 
 ### Unity 版本 
@@ -91,3 +103,10 @@ VFS支持热更新。
 **Odin Inspector** (付费)
 
 <a href="https://odininspector.com/" target="_blank"><img src="https://odininspector.com/files/misc/logo.png" width = "150" /></a>
+
+
+## 优秀的Unity项目安利
+
+- [QFramework](https://github.com/liangxiegame/QFramework) : 一套渐进式的快速开发框架
+- [xasset](https://github.com/xasset/xasset) : 一个简易轻量的Unity资源管理框架
+- [CatLib](https://github.com/CatLib/Core) : 轻量级依赖注入框架

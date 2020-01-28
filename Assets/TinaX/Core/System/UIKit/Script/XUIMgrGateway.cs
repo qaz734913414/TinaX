@@ -11,7 +11,7 @@ namespace TinaX.UIKit
     /// <summary>
     /// UI管理器 入口
     /// </summary>
-    public class XUIMgrGateway:IUIMgr
+    public class XUIMgrGateway:IUIKit
     {
         /// <summary>
         /// 管理器模式; 0: 简单模式      1：高级模式
@@ -25,10 +25,14 @@ namespace TinaX.UIKit
         private Canvas mUIRootCanvas;   //UIRoot Canvas
         private Transform mUIRootTrans;
         private RectTransform mUIRootRectTrans;
+        private Camera mUICamera;
+        private GameObject mUICameraGameObject;
         
 
         private UIKitConfig mConfig;
         private UIGroupConf mDefaultUIGroup;
+
+        private IVFS mVFS;
 
         #region UISafeArea
 
@@ -39,8 +43,9 @@ namespace TinaX.UIKit
         /// <summary>
         /// 初始化
         /// </summary>
-        public XUIMgrGateway()
+        public XUIMgrGateway(IVFS _vfs)
         {
+            mVFS = _vfs;
             mConfig = TinaX.Config.GetTinaXConfig<UIKitConfig>(ConfigPath.uikit);
             if (mConfig == null)
             {
@@ -63,14 +68,14 @@ namespace TinaX.UIKit
                 //高级模式
                 m_ManagerMode = 1;
                 m_UIMgr_Adv = null;
-                m_UIMgr_Adv = new XUIManagerAdv(this);
+                m_UIMgr_Adv = new XUIManagerAdv(this,mVFS);
             }
             else
             {
                 //简单模式
                 m_ManagerMode = 0;
                 m_UIMgr_Normal = null;
-                m_UIMgr_Normal = new XUIManager(this);
+                m_UIMgr_Normal = new XUIManager(this,mVFS);
             }
 
             #region UISafeArea
@@ -113,7 +118,8 @@ namespace TinaX.UIKit
             camera.allowHDR = false;
             camera.allowMSAA = false;
 
-
+            mUICameraGameObject = Go_UIKit_Camera;
+            mUICamera = camera;
             #endregion
 
 
@@ -124,6 +130,7 @@ namespace TinaX.UIKit
             mUIRootCanvas = canvas;
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = camera;
+            canvas.pixelPerfect = mConfig.PixelPerfect;
 
             var _canvas_scaler = Go_UIKit_Root.GetComponentOrAdd<CanvasScaler>();
             _canvas_scaler.uiScaleMode = mConfig.Canvas_Scale_Mode;
@@ -222,6 +229,24 @@ namespace TinaX.UIKit
                 return mUIRootRectTrans;
             }
         }
+
+        public GameObject UIKit_UICamera_GameObject
+        {
+            get
+            {
+                return mUICameraGameObject;
+            }
+        }
+
+        public Camera UIKit_UICamera
+        {
+            get
+            {
+                return mUICamera;
+            }
+        }
+
+
 
         public XUISafeAreaMgr UISafeAreaManager
         {
@@ -530,6 +555,33 @@ namespace TinaX.UIKit
         {
             mDefaultUIGroup = ui_group;
         }
+
+        /// <summary>
+        /// 置顶UI
+        /// </summary>
+        public void SetUILayerTop(UIEntity entity)
+        {
+            m_UILayerMgr.SetUILayerTop(entity);
+        }
+
+
+        public Vector2 GetUIScreenLocalPoint(Transform trans)
+        {
+            Vector2 point;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                mUIRootRectTrans,
+                mUICamera.WorldToScreenPoint(trans.position),
+                mUICamera,
+                out point))
+            {
+                return point;
+            }
+            else
+            {
+                return Vector2.zero;
+            }
+        }
+
     }
 
 
@@ -683,6 +735,7 @@ namespace TinaX.UIKit
 
         private int mCurMaxLayer = 0;   //这里以UI本体所在layer记录
 
+        private List<UIEntity> mUIPool = new List<UIEntity>(); //存放所有UI
         private List<UIEntity> mFullScreen_GameObject_List = new List<UIEntity>();
         private UIEntity mCur_Active_FullScreenUI; //当前活动状态的全屏界面
 
@@ -695,8 +748,12 @@ namespace TinaX.UIKit
         /// <param name="uiLayer">UI本体Layer序列</param>
         public void OnUIOpen(out int uiLayer, bool IsFullScreen, bool DontPauseWhenHide, UIEntity _Entity)
         {
-            //最大UI层级数 + 10 （也就是一个UI占用的数量）
-            mCurMaxLayer= mCurMaxLayer + 10;
+            //先存入UI
+            mUIPool.Add(_Entity);
+            ////最大UI层级数 + 10 （也就是一个UI占用的数量）
+            //mCurMaxLayer = mCurMaxLayer + 10;]
+            mCurMaxLayer = mUIPool.Count * 10 + 1;
+            
             uiLayer = mCurMaxLayer;
 
             //全屏UI处理
@@ -723,16 +780,34 @@ namespace TinaX.UIKit
                 mCur_Active_FullScreenUI = _Entity;
             }
 
+            
+
         }
 
         public void OnUIClose(UIItem ui_item)
         {
-            if(ui_item.LayerIndex == mCurMaxLayer)
-            {
-                //将被关掉的是最顶级的UI;
-                mCurMaxLayer -= 10;
-            }
+            //if(ui_item.LayerIndex == mCurMaxLayer)
+            //{
+            //    //将被关掉的是最顶级的UI;
+            //    mCurMaxLayer -= 10;
+            //}
             var entity = ui_item.GetUIEntity();
+            for (var i = mUIPool.Count -1; i >=0; i--)
+            {
+                if(mUIPool[i] != entity)
+                {
+                    //被关掉的不是最顶层的UI
+                    //把这个UI上面的UI层级依次减10
+                    mUIPool[i].SetLayer(mUIPool[i].LayerIndex - 10);
+                }
+                else
+                {
+                    mUIPool.RemoveAt(i);
+                    break;
+                }
+            }
+
+            //var entity = ui_item.GetUIEntity();
             if (entity.IsFullScreenUI)
             {
                 mFullScreen_GameObject_List.Remove(entity);
@@ -755,6 +830,37 @@ namespace TinaX.UIKit
 
                 }
             }
+        }
+
+        /// <summary>
+        /// 将某个UI置顶
+        /// </summary>
+        /// <param name="uientity"></param>
+        public void SetUILayerTop(UIEntity uiEntity)
+        {
+            if(uiEntity == mUIPool[mUIPool.Count - 1])
+            {
+                return;
+            }
+            int cur_max_layer_index = mUIPool[mUIPool.Count - 1].LayerIndex;
+            for(var i = mUIPool.Count -1; i >= 0; i -- )
+            {
+                if(mUIPool[i] != uiEntity)
+                {
+                    //把这个UI上面的UI层级依次减10
+                    mUIPool[i].SetLayer(mUIPool[i].LayerIndex - 10);
+                }
+                else
+                {
+                    uiEntity.SetLayer(cur_max_layer_index);
+                    //得把这个UI在list中放在最后面
+                    var temp = mUIPool[mUIPool.Count -1];
+                    mUIPool[mUIPool.Count -1] = mUIPool[i];
+                    mUIPool[i] = temp;
+                    break;
+                }
+            }
+
         }
 
         public UILayerMgr(XUIMgrGateway _gateway)
@@ -937,7 +1043,7 @@ namespace TinaX.UIKit
             //手起刀落
             GameObject.Destroy(mUIEntity.gameObject);
             //通知资源管理器，可以回收了
-            AssetsMgr.I.RemoveUse(mUIPath);
+            VFSMgr.I.RemoveUse(mUIPath);
             //打扫
             mUIEntity = null;
             mUIPrefab = null;
